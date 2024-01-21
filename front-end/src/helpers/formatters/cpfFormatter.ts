@@ -1,6 +1,8 @@
 function formatCPF(cpf: string): string {
-    const cleaned = ('' + cpf).replace(/\D/g, '');
+    let cleaned = ('' + cpf).replace(/\D/g, '');
+    cleaned = cleaned.substring(0, 11);
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{3})(\d{2})$/);
+
     if (match) {
         return match[1] + '.' + match[2] + '.' + match[3] + '-' + match[4];
     }
