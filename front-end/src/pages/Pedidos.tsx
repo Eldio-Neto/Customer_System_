@@ -14,7 +14,7 @@ const Page = () => {
         cliente: {
             id: 0, nome: '', data_nascimento: '', telefone: '', cpf: '', ativo: true, created_at: '', updated_at: ''
         },
-        imagem: {
+        pedido_image: {
             id: 0, pedido_id: 0, imagem: '', capa: ''
         },
     }
@@ -261,8 +261,14 @@ const Page = () => {
                         </div>
                         <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                             <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Cliente</h3>
+                                <h3 className="text-lg leading-6 font-medium text-gray-900">Editar Pedidos</h3>
                                 <div className="mt-2">
+                                    {editingOrder.pedido_image?.imagem && <div className="mt-2">
+                                        <label className="block text-sm font-medium text-gray-700">Imagem do Produto</label>
+                                        <div style={{ width: '90px', height: '100px', overflow: 'hidden' }}>
+                                            <img src={`http://localhost:8000/${editingOrder.pedido_image?.imagem}`} alt="Imagem do pedido" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
+                                    </div>}
                                     <div className="mt-2">
                                         <label className="block text-sm font-medium text-gray-700">Produto</label>
                                         <input
@@ -312,6 +318,7 @@ const Page = () => {
                                             </div>
                                         </div>
 
+                                       
                                         <label className="block text-sm font-medium text-gray-700">Status</label>
 
                                         <div className="inline-block relative w-64">
@@ -330,8 +337,9 @@ const Page = () => {
                                             </div>
                                         </div>
 
-                                        <label htmlFor="imagem">Imagem do Pedido:</label>
-                                        <input type="file" id="imagem" name="imagem" onChange={handleImageChange} />
+                                        <label htmlFor="imagem" className="block text-sm font-medium text-gray-700">Imagem do Pedido:</label>
+                                        <input className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"type="file" accept="image/*" id="imagem" name="imagem" onChange={handleImageChange} />
+
                                     </div>
                                 </div>
                             </div>
