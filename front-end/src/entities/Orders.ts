@@ -10,7 +10,7 @@ type Order = {
     created_at: string;
     updated_at: string;
     cliente: Customer;
-    imagem: OrderImage;
+    pedido_image: OrderImage;
 }
 
 export default Order;
