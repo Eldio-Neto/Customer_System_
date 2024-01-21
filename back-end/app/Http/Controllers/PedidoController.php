@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Intervention\Image\Facades\Image;
+use Intervention\Image\ImageManagerStatic as Image;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Drivers\Imagick\Driver;
 
 use App\Models\Pedido;
 use App\Models\Pedido_image;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class PedidoController extends Controller
 {
@@ -22,12 +25,12 @@ class PedidoController extends Controller
         ]);
 
         $pedido = Pedido::create($validatedData);
-        $pedido->load('cliente:id,nome');
 
         if ($request->hasFile('imagem')) {
             $imagem = $request->file('imagem');
             $this->store($imagem,  $pedido);
         }
+        $pedido->load('cliente:id,nome', 'pedido_image');
 
         return response()->json(['success' => 'Pedido criado com sucesso', 'pedido' => $pedido])->setStatusCode(201);
     }
@@ -35,7 +38,7 @@ class PedidoController extends Controller
     public function getAllOrders()
     {
 
-        $pedidos = Pedido::with('cliente:id,nome')->get();
+        $pedidos = Pedido::with('cliente:id,nome', 'pedido_image')->get();
         // Retornar uma resposta
         return response()->json(['success' => 'Pedidos recuperados com sucesso', 'pedidos' => $pedidos]);
     }
@@ -52,6 +55,10 @@ class PedidoController extends Controller
 
         $pedido->update($validatedData);
 
+        if ($request->hasFile('imagem')) {
+            $this->updateImage($request, $pedido);
+        }
+
         return response()
             ->json([
                 'message' => 'Pedido atualizado com sucesso!',
@@ -63,7 +70,20 @@ class PedidoController extends Controller
     public function delete(Pedido $pedido)
     {
 
+        // Deleta o arquivo de imagem do diretório public
+        // Verifica se o pedido tem uma imagem
+    if ($pedido->pedido_image) {
+        // Deleta o arquivo de imagem do diretório public
+        Storage::delete('public/imagens/' . $pedido->pedido_image->imagem);
+
+        // Deleta a imagem do pedido
+        $pedido->pedido_image()->delete();
+    }
+        
+
+        // Depois deleta o pedido
         $pedido->delete();
+
         return response()->json(['mensagem' => 'Pedido deletado com Sucesso'])->setStatusCode(200);
     }
 
@@ -105,16 +125,59 @@ class PedidoController extends Controller
         return 'imagens/' . $nomeImagem;
     }
 
-    public function store($imagem, $pedido)
+    public function store($imagem, $pedido, $boo = false)
     {
-        // Salvar a imagem e obter o caminho
-        $caminhoImagem = $this->storeImage($imagem);
+        // Recuperar o caminho da imagem antiga
+        $pedidoImagemAntiga = Pedido_image::where('pedido_id', $pedido->id)->first();
 
-        // Salvar o caminho da imagem no banco de dados
-        $pedidoImagem = new Pedido_image();
-        $pedidoImagem->pedido_id = $pedido->id;
-        $pedidoImagem->imagem = $caminhoImagem;
-        $pedidoImagem->capa = 'imagens/redimensionadas/' . $caminhoImagem;
-        $pedidoImagem->save();
+        if ($boo) {
+
+            if ($pedidoImagemAntiga) {
+                Storage::delete($pedidoImagemAntiga->imagem);
+                // Salvar a nova imagem e obter o caminho
+                $caminhoImagem = $this->storeImage($imagem);
+                $caminhoImagemRedimensionada = $caminhoImagem;
+                // Salvar o caminho da imagem no banco de dados
+
+                $pedidoImagemAntiga->imagem = $caminhoImagem;
+                $pedidoImagemAntiga->capa = $caminhoImagemRedimensionada;
+                $pedidoImagemAntiga->save();
+            } else {
+                // Salvar a nova imagem e obter o caminho
+                $caminhoImagem = $this->storeImage($imagem);
+                $caminhoImagemRedimensionada = $caminhoImagem;
+
+                Pedido_image::create([
+                    'pedido_id' => $pedido->id,
+                    'imagem' => $caminhoImagem,
+                    'capa' => $caminhoImagemRedimensionada
+                ]);
+            }
+        } else {
+
+            // Salvar a nova imagem e obter o caminho
+            $caminhoImagem = $this->storeImage($imagem);
+            $caminhoImagemRedimensionada = $caminhoImagem;
+
+            Pedido_image::create([
+                'pedido_id' => $pedido->id,
+                'imagem' => $caminhoImagem,
+                'capa' => $caminhoImagemRedimensionada
+            ]);
+        }
+    }
+
+    public function updateImage(Request $request, Pedido $pedido)
+    {
+        $validatedData = $request->validate([
+            'imagem' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+        ]);
+
+        if ($request->hasFile('imagem')) {
+            $imagem = $request->file('imagem');
+            $this->store($imagem,  $pedido, true);
+        }
+
+        return response()->json(['success' => 'Imagem atualizada com sucesso', 'pedido' => $pedido])->setStatusCode(201);
     }
 }
