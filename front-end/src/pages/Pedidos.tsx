@@ -4,6 +4,7 @@ import Order from "../entities/Orders";
 import OrderStatus from "../entities/OrderStatus";
 import { Customer } from "../entities/Customer";
 import { NumericFormat } from 'react-number-format';
+import validateOrderDate from '../helpers/validations/orderDateValidation';
 import formatDate from '../helpers/formatters/dateFormatter';
 import { faEdit, faTrash, faFileCsv } from '@fortawesome/free-solid-svg-icons'
 import Button from '../components/button';
@@ -110,6 +111,12 @@ const Page = () => {
             // Adicionar a imagem ao objeto FormData se ela existir
             if (image) {
                 formData.append('imagem', image);
+            }
+
+            if (!validateOrderDate(editingOrder.data_pedido)) {
+                setErrors({ data_pedido: 'A data do pedido não pode ser anterior a hoje.' });
+                setIsErrorModalOpen(true);
+                return;
             }
 
             try {
