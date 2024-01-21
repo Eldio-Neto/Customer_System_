@@ -10,7 +10,7 @@ const RoutesApp = ()=>{
         <BrowserRouter>
             <Header/>
             <Routes>
-                <Route path="/" element={<Home/>}/>
+                <Route path="/" element={<Clientes/>}/>
                 <Route path="/clientes" element={<Clientes/>}/>
                 <Route path="/pedidos" element={<Pedidos/>}/>                
             </Routes>
