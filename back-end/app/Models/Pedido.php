@@ -22,4 +22,9 @@ class Pedido extends Model
     {
         return $this->belongsTo('App\Models\Cliente');
     }
+
+    public function pedido_image()
+    {
+        return $this->hasOne(Pedido_image::class);
+    }
 }
